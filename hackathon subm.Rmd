@@ -1,0 +1,99 @@
+---
+title: "hackathon2"
+author: "A N Ravi teja"
+date: "10 November 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(class)
+library(tree)
+library(e1071)
+```
+
+```{r}
+#2   Define your data exploration, imputation and visualization approach
+     #we have found some classes of columns as ? like for
+     #workspace,occupation,native.country.Together all of these contribute not more than 5%of 
+    # total dataset.so i have removed all the rows that contained "?" by converting them to na"
+  #for (i in 1:ncol(file)) {file[,i][file[,i] == ' ?'] = NA}
+  #file <- na.omit(file)
+
+    #The education and education_num columns has a zero correlation between them,so we can drop        that column.
+
+#6. for creative "DS" think:
+     #As there are many levels(43) for native.country colums we can clasify them to specific           continents
+
+```
+
+
+```{r}
+#Naive Bayes
+file<- read.csv("hack.csv")
+for (i in 1:ncol(file)) {file[,i][file[,i] == ' ?'] = NA}
+file <- na.omit(file)
+set.seed(70)
+sample=sample.int(n=nrow(file),size=floor(.8*nrow(file)),replace=F)
+na_train=file[sample,]
+na_test=file[-sample,]
+model=naiveBayes(salary~age,workclass,education,marital-status,occupation,race,hours-per-week,capital-gain,capital-loss,continent,data=file)
+pred=predict(model,na_test[,-1])
+confmat=table(pred,na_test$salary)
+confmat
+accuracy=sum(diag(confmat))/sum(confmat)
+accuracy
+
+```
+
+```{r}
+#Decision Trees
+file<- read.csv("hack.csv")
+for (i in 1:ncol(file)) {file[,i][file[,i] == ' ?'] = NA}
+file <- na.omit(file)
+set.seed(70)
+sample=sample.int(n=nrow(file),size=floor(.8*nrow(file)),replace=F)
+na_train=file[sample,]
+na_test=file[-sample,]
+tree.model=tree(salary~age+workclass+education+occupation+marital_status+race+hours_per_week,data=na_train)
+tree.model
+summary(tree.model)
+plot(tree.model)
+text(tree.model)
+model_prediction=predict(tree.model,na_test)
+maxidx=function(arr){
+  return(which(arr==max(arr)))}
+idx=apply(model_prediction,c(1),maxidx)
+modelprediction=c("<=50K",">50K")[idx]
+confmat=table(modelprediction,na_test$salary)
+confmat
+accuracy=sum(diag(confmat))/sum(confmat)
+accuracy
+```
+
+```{r}
+#K Nearest Neighbours
+file<- read.csv("hack.csv")
+for (i in 1:ncol(file)) {file[,i][file[,i] == ' ?'] = NA}
+file <- na.omit(file)
+for(i in 1:ncol(file)){
+  file[,i]=as.numeric(file[,i])
+}
+set.seed(70)
+sample=sample.int(n=nrow(file),size=floor(.8*nrow(file)),replace=F)
+na_train=file[sample,]
+na_test=file[-sample,]
+knn_traindata=na_train[,c(1:3,5:14)]
+knn_testdata=na_test[,c(1:3,5:14)]
+knn_trainlabel=na_train[,15]
+knn_testlabel=na_test[,15]
+library(class)
+k=5
+knn_pred_label=knn(train=knn_traindata,test=knn_testdata,cl=knn_trainlabel,k)
+confmat=table(knn_testlabel,knn_pred_label)
+confmat
+accuracy=sum(diag(confmat))/sum(confmat)
+accuracy
+
+```
+
